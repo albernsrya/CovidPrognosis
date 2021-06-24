@@ -39,9 +39,8 @@ class MimicCxrJpgDataset(BaseDataset):
         subselect: Optional[str] = None,
         transform: Optional[Callable] = None,
     ):
-        super().__init__(
-            "mimic-cxr-jpg", directory, split, label_list, subselect, transform
-        )
+        super().__init__("mimic-cxr-jpg", directory, split, label_list,
+                         subselect, transform)
 
         if label_list == "all":
             self.label_list = self.default_labels()
@@ -63,39 +62,31 @@ class MimicCxrJpgDataset(BaseDataset):
             "PatientOrientationCodeSequence_CodeMeaning",
         ]
 
-        self.label_csv_path = (
-            self.directory / "2.0.0" / "mimic-cxr-2.0.0-chexpert.csv.gz"
-        )
-        self.meta_csv_path = (
-            self.directory / "2.0.0" / "mimic-cxr-2.0.0-metadata.csv.gz"
-        )
+        self.label_csv_path = (self.directory / "2.0.0" /
+                               "mimic-cxr-2.0.0-chexpert.csv.gz")
+        self.meta_csv_path = (self.directory / "2.0.0" /
+                              "mimic-cxr-2.0.0-metadata.csv.gz")
         self.split_csv_path = self.directory / "2.0.0" / "mimic-cxr-2.0.0-split.csv.gz"
         if self.split in ("train", "val", "test"):
             split_csv = pd.read_csv(self.split_csv_path)["split"].str.contains(
-                self.split
-            )
+                self.split)
             meta_csv = pd.read_csv(self.meta_csv_path)[split_csv].set_index(
-                ["subject_id", "study_id"]
-            )
+                ["subject_id", "study_id"])
             label_csv = pd.read_csv(self.label_csv_path).set_index(
-                ["subject_id", "study_id"]
-            )
+                ["subject_id", "study_id"])
 
             self.csv = meta_csv.join(label_csv).reset_index()
         elif self.split == "all":
             meta_csv = pd.read_csv(self.meta_csv_path).set_index(
-                ["subject_id", "study_id"]
-            )
+                ["subject_id", "study_id"])
             label_csv = pd.read_csv(self.label_csv_path).set_index(
-                ["subject_id", "study_id"]
-            )
+                ["subject_id", "study_id"])
 
             self.csv = meta_csv.join(label_csv).reset_index()
         else:
-            logging.warning(
-                "split {} not recognized for dataset {}, "
-                "not returning samples".format(split, self.__class__.__name__)
-            )
+            logging.warning("split {} not recognized for dataset {}, "
+                            "not returning samples".format(
+                                split, self.__class__.__name__))
 
         self.csv = self.preproc_csv(self.csv, self.subselect)
 
@@ -118,7 +109,8 @@ class MimicCxrJpgDataset(BaseDataset):
             "Support Devices",
         ]
 
-    def preproc_csv(self, csv: pd.DataFrame, subselect: Optional[str]) -> pd.DataFrame:
+    def preproc_csv(self, csv: pd.DataFrame,
+                    subselect: Optional[str]) -> pd.DataFrame:
         if csv is not None:
 
             def format_view(s):
@@ -144,7 +136,8 @@ class MimicCxrJpgDataset(BaseDataset):
         return length
 
     def __getitem__(self, idx: int) -> Dict:
-        assert self.csv is not None
+        if self.csv is None:
+            raise AssertionError
         exam = self.csv.iloc[idx]
 
         subject_id = str(exam["subject_id"])
@@ -152,21 +145,16 @@ class MimicCxrJpgDataset(BaseDataset):
         dicom_id = str(exam["dicom_id"])
 
         filename = self.directory / "2.0.0" / "files"
-        filename = (
-            filename
-            / "p{}".format(subject_id[:2])
-            / "p{}".format(subject_id)
-            / "s{}".format(study_id)
-            / "{}.jpg".format(dicom_id)
-        )
+        filename = (filename / "p{}".format(subject_id[:2]) /
+                    "p{}".format(subject_id) / "s{}".format(study_id) /
+                    "{}.jpg".format(dicom_id))
         image = self.open_image(filename)
 
         metadata = self.retrieve_metadata(idx, filename, exam)
 
         # retrieve labels while handling missing ones for combined data loader
-        labels = np.array(exam.reindex(self.label_list)[self.label_list]).astype(
-            np.float
-        )
+        labels = np.array(exam.reindex(
+            self.label_list)[self.label_list]).astype(np.float)
 
         sample = {"image": image, "labels": labels, "metadata": metadata}
 

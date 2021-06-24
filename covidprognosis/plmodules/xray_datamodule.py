@@ -8,10 +8,11 @@ import os
 from argparse import ArgumentParser
 from typing import Callable, List, Optional, Union
 
-import covidprognosis as cp
 import numpy as np
 import pytorch_lightning as pl
 import torch
+
+import covidprognosis as cp
 
 
 class TwoImageDataset(torch.utils.data.Dataset):
@@ -23,7 +24,8 @@ class TwoImageDataset(torch.utils.data.Dataset):
     """
 
     def __init__(self, dataset: cp.data.BaseDataset):
-        assert isinstance(dataset, cp.data.BaseDataset)
+        if not isinstance(dataset, cp.data.BaseDataset):
+            raise AssertionError
         self.dataset = dataset
 
     def __len__(self):
@@ -55,12 +57,14 @@ def fetch_dataset(
 ):
     """Dataset fetcher for config handling."""
 
-    assert split in ("train", "val", "test")
+    if split not in ("train", "val", "test"):
+        raise AssertionError
     dataset: Union[cp.data.BaseDataset, TwoImageDataset]
 
     # determine the dataset
     if dataset_name == "nih":
-        assert not isinstance(dataset_dir, list)
+        if isinstance(dataset_dir, list):
+            raise AssertionError
         dataset = cp.data.NIHChestDataset(
             directory=dataset_dir,
             split=split,
@@ -69,7 +73,8 @@ def fetch_dataset(
             resplit=True,
         )
     if dataset_name == "mimic":
-        assert not isinstance(dataset_dir, list)
+        if isinstance(dataset_dir, list):
+            raise AssertionError
         dataset = cp.data.MimicCxrJpgDataset(
             directory=dataset_dir,
             split=split,
@@ -77,7 +82,8 @@ def fetch_dataset(
             label_list=label_list,
         )
     elif dataset_name == "chexpert":
-        assert not isinstance(dataset_dir, list)
+        if isinstance(dataset_dir, list):
+            raise AssertionError
         dataset = cp.data.CheXpertDataset(
             directory=dataset_dir,
             split=split,
@@ -85,7 +91,8 @@ def fetch_dataset(
             label_list=label_list,
         )
     elif dataset_name == "mimic-chexpert":
-        assert isinstance(dataset_dir, list)
+        if not isinstance(dataset_dir, list):
+            raise AssertionError
         dataset = cp.data.CombinedXrayDataset(
             dataset_list=["chexpert_v1", "mimic-cxr"],
             directory_list=dataset_dir,
@@ -105,7 +112,7 @@ def fetch_dataset(
 def worker_init_fn(worker_id):
     """Handle random seeding."""
     worker_info = torch.utils.data.get_worker_info()
-    seed = worker_info.seed % (2 ** 32 - 1)  # pylint: disable=no-member
+    seed = worker_info.seed % (2**32 - 1)  # pylint: disable=no-member
 
     np.random.seed(seed)
 
@@ -130,7 +137,8 @@ class XrayDataModule(pl.LightningDataModule):
     def __init__(
         self,
         dataset_name: str,
-        dataset_dir: Union[List[Union[str, os.PathLike]], Union[str, os.PathLike]],
+        dataset_dir: Union[List[Union[str, os.PathLike]], Union[str,
+                                                                os.PathLike]],
         label_list: Union[str, List[str]] = "all",
         batch_size: int = 1,
         num_workers: int = 4,
@@ -177,7 +185,8 @@ class XrayDataModule(pl.LightningDataModule):
             self.label_list = self.train_dataset.label_list
 
     def __dataloader(self, split: str) -> torch.utils.data.DataLoader:
-        assert split in ("train", "val", "test")
+        if split not in ("train", "val", "test"):
+            raise AssertionError
         shuffle = False
         if split == "train":
             dataset = self.train_dataset

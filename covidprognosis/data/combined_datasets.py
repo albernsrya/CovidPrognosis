@@ -66,17 +66,16 @@ class CombinedXrayDataset(BaseDataset):
         else:
             if isinstance(label_list, str):
                 raise ValueError(
-                    "If inputting label_list, label_list must not be a string"
-                )
+                    "If inputting label_list, label_list must not be a string")
             self.label_list = label_list
 
         self.datasets = []
         for (dataset_name, directory, split, subselect, transform) in zip(
-            self.dataset_list,
-            self.directory_list,
-            self.split_list,
-            self.subselect_list,
-            self.transform_list,
+                self.dataset_list,
+                self.directory_list,
+                self.split_list,
+                self.subselect_list,
+                self.transform_list,
         ):
             self.datasets.append(
                 self.fetch_dataset(
@@ -86,14 +85,14 @@ class CombinedXrayDataset(BaseDataset):
                     self.label_list,
                     subselect,
                     transform,
-                )
-            )
+                ))
 
     def to_list(self, item):
         if not isinstance(item, list):
             item = [item] * len(self.dataset_list)
 
-        assert len(item) == len(self.dataset_list)
+        if len(item) != len(self.dataset_list):
+            raise AssertionError
 
         return item
 
