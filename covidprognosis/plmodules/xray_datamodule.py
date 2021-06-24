@@ -8,10 +8,11 @@ import os
 from argparse import ArgumentParser
 from typing import Callable, List, Optional, Union
 
-import covidprognosis as cp
 import numpy as np
 import pytorch_lightning as pl
 import torch
+
+import covidprognosis as cp
 
 
 class TwoImageDataset(torch.utils.data.Dataset):
@@ -111,7 +112,7 @@ def fetch_dataset(
 def worker_init_fn(worker_id):
     """Handle random seeding."""
     worker_info = torch.utils.data.get_worker_info()
-    seed = worker_info.seed % (2 ** 32 - 1)  # pylint: disable=no-member
+    seed = worker_info.seed % (2**32 - 1)  # pylint: disable=no-member
 
     np.random.seed(seed)
 
@@ -136,7 +137,8 @@ class XrayDataModule(pl.LightningDataModule):
     def __init__(
         self,
         dataset_name: str,
-        dataset_dir: Union[List[Union[str, os.PathLike]], Union[str, os.PathLike]],
+        dataset_dir: Union[List[Union[str, os.PathLike]], Union[str,
+                                                                os.PathLike]],
         label_list: Union[str, List[str]] = "all",
         batch_size: int = 1,
         num_workers: int = 4,
