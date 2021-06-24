@@ -143,7 +143,8 @@ class NIHChestDataset(BaseDataset):
         return length
 
     def __getitem__(self, idx: int) -> Dict:
-        assert self.csv is not None
+        if self.csv is None:
+            raise AssertionError
         exam = self.csv.iloc[idx]
 
         filename = self.directory / "images" / exam["Image Index"]

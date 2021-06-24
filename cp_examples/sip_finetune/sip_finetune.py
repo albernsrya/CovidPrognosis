@@ -36,9 +36,10 @@ def validate_pretrained_model(state_dict, pretrained_file):
         if "fc.weight" in k or "fc.bias" in k:
             continue
 
-        assert (
+        if not (
             state_dict[k].cpu() == model_dict[k]
-        ).all(), f"{k} changed in linear classifier training."
+        ).all():
+            raise AssertionError(f"{k} changed in linear classifier training.")
 
 
 def download_model(url, fname):

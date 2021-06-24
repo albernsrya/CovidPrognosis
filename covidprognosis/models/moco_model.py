@@ -87,11 +87,13 @@ class MoCo(nn.Module):
 
         batch_size = keys.shape[0]
 
-        assert isinstance(self.queue_ptr, Tensor)
+        if not isinstance(self.queue_ptr, Tensor):
+            raise AssertionError
         ptr = int(self.queue_ptr)
-        assert (
-            self.K % batch_size == 0
-        ), f"batch_size={batch_size}, K={self.K}"  # for simplicity
+        if (
+            self.K % batch_size != 0
+        ):
+            raise AssertionError(f"batch_size={batch_size}, K={self.K}")
 
         # replace the keys at ptr (dequeue and enqueue)
         self.queue[:, ptr : ptr + batch_size] = keys.T

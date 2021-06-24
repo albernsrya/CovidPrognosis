@@ -93,7 +93,8 @@ class CombinedXrayDataset(BaseDataset):
         if not isinstance(item, list):
             item = [item] * len(self.dataset_list)
 
-        assert len(item) == len(self.dataset_list)
+        if len(item) != len(self.dataset_list):
+            raise AssertionError
 
         return item
 

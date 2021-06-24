@@ -144,7 +144,8 @@ class MimicCxrJpgDataset(BaseDataset):
         return length
 
     def __getitem__(self, idx: int) -> Dict:
-        assert self.csv is not None
+        if self.csv is None:
+            raise AssertionError
         exam = self.csv.iloc[idx]
 
         subject_id = str(exam["subject_id"])

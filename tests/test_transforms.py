@@ -23,7 +23,8 @@ def test_compose(shape):
 
     sample = transform(sample)
 
-    assert sample["image"] is not None
+    if sample["image"] is None:
+        raise AssertionError
 
 
 @pytest.mark.parametrize("shape, label_idx", [[[32, 32, 3], 0], [[45, 16, 3], 5]])
@@ -35,7 +36,8 @@ def test_nan_to_int(shape, label_idx):
 
     sample = transform(sample)
 
-    assert sample["labels"][label_idx] == 5
+    if sample["labels"][label_idx] != 5:
+        raise AssertionError
 
 
 @pytest.mark.parametrize(
@@ -50,7 +52,8 @@ def test_remap_label(shape, label_idx, start_label, end_label):
 
     sample = transform(sample)
 
-    assert sample["labels"][label_idx] == end_label
+    if sample["labels"][label_idx] != end_label:
+        raise AssertionError
 
 
 @pytest.mark.parametrize("shape", [[32, 32, 3], [45, 16, 3]])
@@ -77,7 +80,8 @@ def test_histnorm(shape):
 
     sample = transform(sample)
 
-    assert torch.allclose(sample["image"], image)
+    if not torch.allclose(sample["image"], image):
+        raise AssertionError
 
 
 @pytest.mark.parametrize("shape", [[32, 32, 3], [45, 16, 3]])
@@ -103,7 +107,8 @@ def test_rand_gauss_blur(shape):
     )
     sample = transform(sample)
 
-    assert torch.allclose(sample["image"], image)
+    if not torch.allclose(sample["image"], image):
+        raise AssertionError
 
     # retest for 0 probability
     sample = create_input(shape)
@@ -115,7 +120,8 @@ def test_rand_gauss_blur(shape):
     # transform blur
     sample = transform(sample)
 
-    assert torch.allclose(sample["image"], image)
+    if not torch.allclose(sample["image"], image):
+        raise AssertionError
 
 
 @pytest.mark.parametrize("shape", [[32, 32, 3], [45, 16, 3]])
@@ -144,7 +150,8 @@ def test_add_noise(shape):
     np.random.seed(seed)
     sample = transform(sample)
 
-    assert torch.allclose(sample["image"], image)
+    if not torch.allclose(sample["image"], image):
+        raise AssertionError
 
     # retest for 0 probability
     sample = create_input(shape)
@@ -156,7 +163,8 @@ def test_add_noise(shape):
     # transform blur
     sample = transform(sample)
 
-    assert torch.allclose(sample["image"], image)
+    if not torch.allclose(sample["image"], image):
+        raise AssertionError
 
 
 @pytest.mark.parametrize("shape", [[32, 32, 3], [45, 16, 3]])
@@ -176,4 +184,5 @@ def test_tensor_to_rgb(shape):
 
     sample = transform(sample)
 
-    assert torch.allclose(sample["image"], image)
+    if not torch.allclose(sample["image"], image):
+        raise AssertionError

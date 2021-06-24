@@ -37,7 +37,8 @@ def test_dataset_lengths(dataset_name, dataset_length_dict):
     if dataset is None:
         pytest.skip()
     else:
-        assert len(dataset) == dataset_length_dict[dataset_name]
+        if len(dataset) != dataset_length_dict[dataset_name]:
+            raise AssertionError
 
 
 @pytest.mark.parametrize(
@@ -69,8 +70,10 @@ def test_dataset_getitem(dataset_name):
         item1 = dataset[0]
         item2 = dataset[-1]
 
-        assert item1 is not None
-        assert item2 is not None
+        if item1 is None:
+            raise AssertionError
+        if item2 is None:
+            raise AssertionError
 
 
 def test_combined_loader():
@@ -78,10 +81,13 @@ def test_combined_loader():
     dataset = fetch_dataset("combined_all", transform=transform)
 
     sample = dataset[0]
-    assert "CheXpert" in str(sample["metadata"]["filename"])
+    if "CheXpert" not in str(sample["metadata"]["filename"]):
+        raise AssertionError
 
     sample = dataset[300000]
-    assert "nih-chest-xrays" in str(sample["metadata"]["filename"])
+    if "nih-chest-xrays" not in str(sample["metadata"]["filename"]):
+        raise AssertionError
 
     sample = dataset[600000]
-    assert "mimic-cxr-jpg" in str(sample["metadata"]["filename"])
+    if "mimic-cxr-jpg" not in str(sample["metadata"]["filename"]):
+        raise AssertionError
