@@ -14,17 +14,12 @@ import numpy as np
 import pytorch_lightning as pl
 import torch
 import yaml
-from covidprognosis.data.transforms import (
-    Compose,
-    HistogramNormalize,
-    NanToInt,
-    RemapLabel,
-    TensorToRGB,
-)
-from covidprognosis.plmodules import XrayDataModule
+from sip_finetune import SipModule
 from torchvision import transforms
 
-from sip_finetune import SipModule
+from covidprognosis.data.transforms import (Compose, HistogramNormalize,
+                                            NanToInt, RemapLabel, TensorToRGB)
+from covidprognosis.plmodules import XrayDataModule
 
 
 def build_args(arg_defaults=None):
@@ -109,16 +104,18 @@ def build_args(arg_defaults=None):
             args.resume_from_checkpoint = str(ckpt_list[-1])
 
     args.callbacks.append(
-        pl.callbacks.ModelCheckpoint(dirpath=checkpoint_dir, verbose=True)
-    )
+        pl.callbacks.ModelCheckpoint(dirpath=checkpoint_dir, verbose=True))
 
     return args
 
 
-def fetch_pos_weights(dataset_name, csv, label_list, uncertain_label, nan_label):
+def fetch_pos_weights(dataset_name, csv, label_list, uncertain_label,
+                      nan_label):
     if dataset_name == "nih":
-        pos = [(csv["Finding Labels"].str.contains(lab)).sum() for lab in label_list]
-        neg = [(~csv["Finding Labels"].str.contains(lab)).sum() for lab in label_list]
+        pos = [(csv["Finding Labels"].str.contains(lab)).sum()
+               for lab in label_list]
+        neg = [(~csv["Finding Labels"].str.contains(lab)).sum()
+               for lab in label_list]
         pos_weights = torch.tensor((neg / np.maximum(pos, 1)).astype(np.float))
     else:
         pos = (csv[label_list] == 1).sum()
@@ -134,7 +131,8 @@ def fetch_pos_weights(dataset_name, csv, label_list, uncertain_label, nan_label)
         elif nan_label == -1:
             neg = neg + (csv[label_list].isna()).sum()
 
-        pos_weights = torch.tensor((neg / np.maximum(pos, 1)).values.astype(np.float))
+        pos_weights = torch.tensor(
+            (neg / np.maximum(pos, 1)).values.astype(np.float))
 
     return pos_weights
 

@@ -10,17 +10,13 @@ from pathlib import Path
 
 import pytorch_lightning as pl
 import yaml
-from covidprognosis.data.transforms import (
-    AddGaussianNoise,
-    Compose,
-    HistogramNormalize,
-    RandomGaussianBlur,
-    TensorToRGB,
-)
-from covidprognosis.plmodules import XrayDataModule
+from moco_module import MoCoModule
 from torchvision import transforms
 
-from moco_module import MoCoModule
+from covidprognosis.data.transforms import (AddGaussianNoise, Compose,
+                                            HistogramNormalize,
+                                            RandomGaussianBlur, TensorToRGB)
+from covidprognosis.plmodules import XrayDataModule
 
 
 def build_args(arg_defaults=None):
@@ -79,8 +75,7 @@ def build_args(arg_defaults=None):
             args.resume_from_checkpoint = str(ckpt_list[-1])
 
     args.callbacks.append(
-        pl.callbacks.ModelCheckpoint(dirpath=checkpoint_dir, verbose=True)
-    )
+        pl.callbacks.ModelCheckpoint(dirpath=checkpoint_dir, verbose=True))
 
     return args
 

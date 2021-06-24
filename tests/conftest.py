@@ -9,13 +9,10 @@ from pathlib import Path
 import numpy as np
 import pytest
 import yaml
-from covidprognosis.data import (
-    CheXpertDataset,
-    CombinedXrayDataset,
-    MimicCxrJpgDataset,
-    NIHChestDataset,
-)
 from PIL import Image
+
+from covidprognosis.data import (CheXpertDataset, CombinedXrayDataset,
+                                 MimicCxrJpgDataset, NIHChestDataset)
 
 DATA_CONFIG = "configs/data.yaml"
 
@@ -61,13 +58,17 @@ def fetch_dataset(dataset_name, transform):
         return None
 
     if dataset_name == "nih":
-        dataset = NIHChestDataset(directory=data_path, split=split, transform=transform)
+        dataset = NIHChestDataset(directory=data_path,
+                                  split=split,
+                                  transform=transform)
     elif dataset_name == "chexpert":
-        dataset = CheXpertDataset(directory=data_path, split=split, transform=transform)
+        dataset = CheXpertDataset(directory=data_path,
+                                  split=split,
+                                  transform=transform)
     elif dataset_name == "mimic":
-        dataset = MimicCxrJpgDataset(
-            directory=data_path, split=split, transform=transform
-        )
+        dataset = MimicCxrJpgDataset(directory=data_path,
+                                     split=split,
+                                     transform=transform)
     elif dataset_name == "combined":
         dataset = CombinedXrayDataset(
             directory_list=data_path,

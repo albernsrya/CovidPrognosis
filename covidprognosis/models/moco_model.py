@@ -43,31 +43,27 @@ class MoCo(nn.Module):
         if mlp:  # hack: brute-force replacement
             if hasattr(self.encoder_q, "fc"):  # ResNet models
                 dim_mlp = self.encoder_q.fc.weight.shape[1]
-                self.encoder_q.fc = nn.Sequential(
-                    nn.Linear(dim_mlp, dim_mlp), nn.ReLU(), self.encoder_q.fc
-                )
-                self.encoder_k.fc = nn.Sequential(
-                    nn.Linear(dim_mlp, dim_mlp), nn.ReLU(), self.encoder_k.fc
-                )
+                self.encoder_q.fc = nn.Sequential(nn.Linear(dim_mlp, dim_mlp),
+                                                  nn.ReLU(), self.encoder_q.fc)
+                self.encoder_k.fc = nn.Sequential(nn.Linear(dim_mlp, dim_mlp),
+                                                  nn.ReLU(), self.encoder_k.fc)
             elif hasattr(self.encoder_q, "classifier"):  # Densenet models
                 dim_mlp = self.encoder_q.classifier.weight.shape[1]
                 self.encoder_q.classifier = nn.Sequential(
-                    nn.Linear(dim_mlp, dim_mlp), nn.ReLU(), self.encoder_q.classifier
-                )
+                    nn.Linear(dim_mlp, dim_mlp), nn.ReLU(),
+                    self.encoder_q.classifier)
                 self.encoder_k.classifier = nn.Sequential(
-                    nn.Linear(dim_mlp, dim_mlp), nn.ReLU(), self.encoder_k.classifier
-                )
+                    nn.Linear(dim_mlp, dim_mlp), nn.ReLU(),
+                    self.encoder_k.classifier)
 
-        for param_q, param_k in zip(
-            self.encoder_q.parameters(), self.encoder_k.parameters()
-        ):
+        for param_q, param_k in zip(self.encoder_q.parameters(),
+                                    self.encoder_k.parameters()):
             param_k.data.copy_(param_q.data)  # initialize
             param_k.requires_grad = False  # not update by gradient
 
         # create the queue
         self.register_buffer(
-            "queue", nn.functional.normalize(torch.randn(dim, K), dim=0)
-        )
+            "queue", nn.functional.normalize(torch.randn(dim, K), dim=0))
         self.register_buffer("queue_ptr", torch.zeros(1, dtype=torch.long))
 
     @torch.no_grad()
@@ -75,10 +71,10 @@ class MoCo(nn.Module):
         """
         Momentum update of the key encoder
         """
-        for param_q, param_k in zip(
-            self.encoder_q.parameters(), self.encoder_k.parameters()
-        ):
-            param_k.data = param_k.data * self.m + param_q.data * (1.0 - self.m)
+        for param_q, param_k in zip(self.encoder_q.parameters(),
+                                    self.encoder_k.parameters()):
+            param_k.data = param_k.data * self.m + param_q.data * (1.0 -
+                                                                   self.m)
 
     @torch.no_grad()
     def _dequeue_and_enqueue(self, keys: Tensor):
@@ -89,12 +85,11 @@ class MoCo(nn.Module):
 
         assert isinstance(self.queue_ptr, Tensor)
         ptr = int(self.queue_ptr)
-        assert (
-            self.K % batch_size == 0
-        ), f"batch_size={batch_size}, K={self.K}"  # for simplicity
+        assert (self.K % batch_size == 0
+                ), f"batch_size={batch_size}, K={self.K}"  # for simplicity
 
         # replace the keys at ptr (dequeue and enqueue)
-        self.queue[:, ptr : ptr + batch_size] = keys.T
+        self.queue[:, ptr:ptr + batch_size] = keys.T
         ptr = (ptr + batch_size) % self.K  # move pointer
 
         self.queue_ptr[0] = ptr
@@ -203,7 +198,8 @@ def concat_all_gather(tensor: Tensor) -> Tensor:
     *** Warning ***: torch.distributed.all_gather has no gradient.
     """
     tensors_gather = [
-        torch.ones_like(tensor) for _ in range(torch.distributed.get_world_size())
+        torch.ones_like(tensor)
+        for _ in range(torch.distributed.get_world_size())
     ]
     torch.distributed.all_gather(tensors_gather, tensor, async_op=False)
 

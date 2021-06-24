@@ -80,9 +80,8 @@ class BaseDataset(Dataset):
 
         return neg_pos_ratio
 
-    def retrieve_metadata(
-        self, idx: int, filename: Union[str, os.PathLike], exam: pd.Series
-    ) -> Dict:
+    def retrieve_metadata(self, idx: int, filename: Union[str, os.PathLike],
+                          exam: pd.Series) -> Dict:
         metadata = {}
         metadata["dataset_name"] = self.dataset_name
         metadata["dataloader class"] = self.__class__.__name__

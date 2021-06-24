@@ -66,7 +66,8 @@ class RemapLabel(XRayTransform):
         output_val: Value to convert to.
     """
 
-    def __init__(self, input_val: Union[float, int], output_val: Union[float, int]):
+    def __init__(self, input_val: Union[float, int], output_val: Union[float,
+                                                                       int]):
         self.input_val = input_val
         self.output_val = output_val
 
@@ -95,9 +96,9 @@ class HistogramNormalize(XRayTransform):
         image = sample["image"].numpy()
 
         # get image histogram
-        image_histogram, bins = np.histogram(
-            image.flatten(), self.number_bins, density=True
-        )
+        image_histogram, bins = np.histogram(image.flatten(),
+                                             self.number_bins,
+                                             density=True)
         cdf = image_histogram.cumsum()  # cumulative distribution function
         cdf = 255 * cdf / cdf[-1]  # normalize
 
@@ -105,9 +106,8 @@ class HistogramNormalize(XRayTransform):
         image_equalized = np.interp(image.flatten(), bins[:-1], cdf)
         image_equalized.reshape(image.shape)
 
-        sample["image"] = torch.tensor(image_equalized.reshape(image.shape)).to(
-            sample["image"]
-        )
+        sample["image"] = torch.tensor(image_equalized.reshape(
+            image.shape)).to(sample["image"])
 
         return sample
 
@@ -121,7 +121,9 @@ class RandomGaussianBlur(XRayTransform):
         sigma_range: Range of sigma values for Gaussian kernel.
     """
 
-    def __init__(self, p: float = 0.5, sigma_range: Tuple[float, float] = (0.1, 2.0)):
+    def __init__(self,
+                 p: float = 0.5,
+                 sigma_range: Tuple[float, float] = (0.1, 2.0)):
         self.p = p
         self.sigma_range = sigma_range
 
@@ -146,21 +148,23 @@ class AddGaussianNoise(XRayTransform):
         snr_range: SNR range for Gaussian noise addition.
     """
 
-    def __init__(self, p: float = 0.5, snr_range: Tuple[float, float] = (2.0, 8.0)):
+    def __init__(self,
+                 p: float = 0.5,
+                 snr_range: Tuple[float, float] = (2.0, 8.0)):
         self.p = p
         self.snr_range = snr_range
 
     def __call__(self, sample: Dict) -> Dict:
         if np.random.uniform() <= self.p:
-            snr_level = np.random.uniform(low=self.snr_range[0], high=self.snr_range[1])
+            snr_level = np.random.uniform(low=self.snr_range[0],
+                                          high=self.snr_range[1])
             signal_level = np.mean(sample["image"].numpy())
 
             # use numpy to keep things consistent on numpy random seed
             sample["image"] = sample["image"] + (
-                signal_level / snr_level
-            ) * torch.tensor(
-                np.random.normal(size=tuple(sample["image"].shape)),
-                dtype=sample["image"].dtype,
+                signal_level / snr_level) * torch.tensor(
+                    np.random.normal(size=tuple(sample["image"].shape)),
+                    dtype=sample["image"].dtype,
             )
 
         return sample

@@ -23,11 +23,12 @@ def filter_nans(logits, labels):
 
 def validate_pretrained_model(state_dict, pretrained_file):
     # sanity check to make sure we're not altering weights
-    pretrained_dict = torch.load(pretrained_file, map_location="cpu")["state_dict"]
+    pretrained_dict = torch.load(pretrained_file,
+                                 map_location="cpu")["state_dict"]
     model_dict = dict()
     for k, v in pretrained_dict.items():
         if "model.encoder_q" in k:
-            model_dict[k[len("model.encoder_q.") :]] = v
+            model_dict[k[len("model.encoder_q."):]] = v
 
     for k in list(model_dict.keys()):
         # only ignore fc layer
@@ -36,9 +37,8 @@ def validate_pretrained_model(state_dict, pretrained_file):
         if "fc.weight" in k or "fc.bias" in k:
             continue
 
-        assert (
-            state_dict[k].cpu() == model_dict[k]
-        ).all(), f"{k} changed in linear classifier training."
+        assert (state_dict[k].cpu() == model_dict[k]
+                ).all(), f"{k} changed in linear classifier training."
 
 
 def download_model(url, fname):
@@ -88,7 +88,8 @@ class SipModule(pl.LightningModule):
             # download the model if given a url
             if "https://" in pretrained_file:
                 url = self.pretrained_file
-                self.pretrained_file = Path.cwd() / pretrained_file.split("/")[-1]
+                self.pretrained_file = Path.cwd() / pretrained_file.split(
+                    "/")[-1]
                 download_model(url, self.pretrained_file)
 
             pretrained_dict = torch.load(self.pretrained_file)["state_dict"]
@@ -100,26 +101,26 @@ class SipModule(pl.LightningModule):
 
             if "model.encoder_q.classifier.weight" in pretrained_dict.keys():
                 feature_dim = pretrained_dict[
-                    "model.encoder_q.classifier.weight"
-                ].shape[0]
+                    "model.encoder_q.classifier.weight"].shape[0]
                 in_features = pretrained_dict[
-                    "model.encoder_q.classifier.weight"
-                ].shape[1]
+                    "model.encoder_q.classifier.weight"].shape[1]
 
                 self.model = models.__dict__[arch](num_classes=feature_dim)
                 self.model.load_state_dict(state_dict)
                 del self.model.classifier
                 self.model.add_module(
-                    "classifier", torch.nn.Linear(in_features, num_classes)
-                )
+                    "classifier", torch.nn.Linear(in_features, num_classes))
             elif "model.encoder_q.fc.weight" in pretrained_dict.keys():
-                feature_dim = pretrained_dict["model.encoder_q.fc.weight"].shape[0]
-                in_features = pretrained_dict["model.encoder_q.fc.weight"].shape[1]
+                feature_dim = pretrained_dict[
+                    "model.encoder_q.fc.weight"].shape[0]
+                in_features = pretrained_dict[
+                    "model.encoder_q.fc.weight"].shape[1]
 
                 self.model = models.__dict__[arch](num_classes=feature_dim)
                 self.model.load_state_dict(state_dict)
                 del self.model.fc
-                self.model.add_module("fc", torch.nn.Linear(in_features, num_classes))
+                self.model.add_module(
+                    "fc", torch.nn.Linear(in_features, num_classes))
             else:
                 raise RuntimeError("Unrecognized classifier.")
         else:
@@ -133,11 +134,9 @@ class SipModule(pl.LightningModule):
 
         # metrics
         self.train_acc = torch.nn.ModuleList(
-            [pl.metrics.Accuracy() for _ in val_pathology_list]
-        )
+            [pl.metrics.Accuracy() for _ in val_pathology_list])
         self.val_acc = torch.nn.ModuleList(
-            [pl.metrics.Accuracy() for _ in val_pathology_list]
-        )
+            [pl.metrics.Accuracy() for _ in val_pathology_list])
 
     def on_epoch_start(self):
         if self.pretrained_file is not None:
@@ -151,9 +150,8 @@ class SipModule(pl.LightningModule):
         loss = 0
         for i in range(len(output)):
             pos_weights, _ = filter_nans(self.pos_weights, target[i])
-            loss_fn = torch.nn.BCEWithLogitsLoss(
-                pos_weight=pos_weights, reduction="sum"
-            )
+            loss_fn = torch.nn.BCEWithLogitsLoss(pos_weight=pos_weights,
+                                                 reduction="sum")
             bind_logits, bind_labels = filter_nans(output[i], target[i])
             loss = loss + loss_fn(bind_logits, bind_labels)
             counts = counts + bind_labels.numel()
@@ -210,7 +208,8 @@ class SipModule(pl.LightningModule):
     def validation_epoch_end(self, outputs):
         # make sure we didn't change the pretrained weights
         if self.pretrained_file is not None:
-            validate_pretrained_model(self.model.state_dict(), self.pretrained_file)
+            validate_pretrained_model(self.model.state_dict(),
+                                      self.pretrained_file)
 
         auc_vals = []
         for i, path in enumerate(self.val_pathology_list):
@@ -226,7 +225,8 @@ class SipModule(pl.LightningModule):
 
             self.val_acc[i](logits, targets)
             try:
-                auc_val = pl.metrics.functional.auroc(torch.sigmoid(logits), targets)
+                auc_val = pl.metrics.functional.auroc(torch.sigmoid(logits),
+                                                      targets)
                 auc_vals.append(auc_val)
             except ValueError:
                 auc_val = 0
@@ -255,7 +255,8 @@ class SipModule(pl.LightningModule):
                 raise RuntimeError("Unrecognized classifier.")
 
         optimizer = torch.optim.Adam(model.parameters(), self.learning_rate)
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, self.epochs)
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer, self.epochs)
 
         return [optimizer], [scheduler]
 

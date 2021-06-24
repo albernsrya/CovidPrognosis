@@ -40,9 +40,8 @@ class NIHChestDataset(BaseDataset):
         resplit_seed: int = 2019,
         resplit_ratios: List[float] = [0.7, 0.2, 0.1],
     ):
-        super().__init__(
-            "nih-chest-xrays", directory, split, label_list, subselect, transform
-        )
+        super().__init__("nih-chest-xrays", directory, split, label_list,
+                         subselect, transform)
 
         if label_list == "all":
             self.label_list = self.default_labels()
@@ -74,20 +73,22 @@ class NIHChestDataset(BaseDataset):
 
             if self.split == "train":
                 patient_list = patient_list[rand_inds[:train_count]]
-                self.csv = pd.concat([grouped.get_group(pat) for pat in patient_list])
+                self.csv = pd.concat(
+                    [grouped.get_group(pat) for pat in patient_list])
             elif self.split == "val":
-                patient_list = patient_list[
-                    rand_inds[train_count : train_count + val_count]
-                ]
-                self.csv = pd.concat([grouped.get_group(pat) for pat in patient_list])
+                patient_list = patient_list[rand_inds[train_count:train_count +
+                                                      val_count]]
+                self.csv = pd.concat(
+                    [grouped.get_group(pat) for pat in patient_list])
             elif self.split == "test":
-                patient_list = patient_list[rand_inds[train_count + val_count :]]
-                self.csv = pd.concat([grouped.get_group(pat) for pat in patient_list])
+                patient_list = patient_list[rand_inds[train_count +
+                                                      val_count:]]
+                self.csv = pd.concat(
+                    [grouped.get_group(pat) for pat in patient_list])
             else:
-                logging.warning(
-                    "split {} not recognized for dataset {}, "
-                    "not returning samples".format(split, self.__class__.__name__)
-                )
+                logging.warning("split {} not recognized for dataset {}, "
+                                "not returning samples".format(
+                                    split, self.__class__.__name__))
         else:
             if self.split == "train":
                 self.csv_path = self.directory / "Data_Entry_2017.csv"
@@ -96,10 +97,9 @@ class NIHChestDataset(BaseDataset):
                 self.csv_path = self.directory / "Data_Entry_2017.csv"
                 self.csv = pd.read_csv(self.csv_path)
             else:
-                logging.warning(
-                    "split {} not recognized for dataset {}, "
-                    "not returning samples".format(split, self.__class__.__name__)
-                )
+                logging.warning("split {} not recognized for dataset {}, "
+                                "not returning samples".format(
+                                    split, self.__class__.__name__))
 
         self.csv = self.preproc_csv(self.csv, self.subselect)
 
@@ -122,7 +122,8 @@ class NIHChestDataset(BaseDataset):
             "Hernia",
         ]
 
-    def preproc_csv(self, csv: pd.DataFrame, subselect: Optional[str]) -> pd.DataFrame:
+    def preproc_csv(self, csv: pd.DataFrame,
+                    subselect: Optional[str]) -> pd.DataFrame:
         if csv is not None:
 
             def format_view(s):
@@ -155,7 +156,8 @@ class NIHChestDataset(BaseDataset):
         # goal here is to see if label is a substring of
         # 'Pneumonia|Cardiomegaly' for each label in self.label_list
         labels = [
-            1 if label in exam["Finding Labels"] else 0 for label in self.label_list
+            1 if label in exam["Finding Labels"] else 0
+            for label in self.label_list
         ]
         labels = np.array(labels).astype(np.float)
 
