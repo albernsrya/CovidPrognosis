@@ -47,9 +47,8 @@ class CheXpertDataset(BaseDataset):
         subselect: Optional[str] = None,
         transform: Optional[Callable] = None,
     ):
-        super().__init__(
-            "chexpert_v1", directory, split, label_list, subselect, transform
-        )
+        super().__init__("chexpert_v1", directory, split, label_list,
+                         subselect, transform)
 
         if label_list == "all":
             self.label_list = self.default_labels()
@@ -73,17 +72,14 @@ class CheXpertDataset(BaseDataset):
             self.csv = pd.read_csv(self.directory / self.csv_path)
         elif self.split == "all":
             self.csv_path = self.directory / "train.csv"
-            self.csv = pd.concat(
-                [
-                    pd.read_csv(self.directory / "CheXpert-v1.0" / "train.csv"),
-                    pd.read_csv(self.directory / "CheXpert-v1.0" / "valid.csv"),
-                ]
-            )
+            self.csv = pd.concat([
+                pd.read_csv(self.directory / "CheXpert-v1.0" / "train.csv"),
+                pd.read_csv(self.directory / "CheXpert-v1.0" / "valid.csv"),
+            ])
         else:
-            logging.warning(
-                "split {} not recognized for dataset {}, "
-                "not returning samples".format(split, self.__class__.__name__)
-            )
+            logging.warning("split {} not recognized for dataset {}, "
+                            "not returning samples".format(
+                                split, self.__class__.__name__))
 
         self.csv = self.preproc_csv(self.csv, self.subselect)
 
@@ -106,7 +102,8 @@ class CheXpertDataset(BaseDataset):
             "Support Devices",
         ]
 
-    def preproc_csv(self, csv: pd.DataFrame, subselect: Optional[str]) -> pd.DataFrame:
+    def preproc_csv(self, csv: pd.DataFrame,
+                    subselect: Optional[str]) -> pd.DataFrame:
         if csv is not None:
             csv["Patient ID"] = csv["Path"].str.extract(pat="(patient\\d+)")
             csv["view"] = csv["Frontal/Lateral"].str.lower()
@@ -133,9 +130,8 @@ class CheXpertDataset(BaseDataset):
         metadata = self.retrieve_metadata(idx, filename, exam)
 
         # retrieve labels while handling missing ones for combined data loader
-        labels = np.array(exam.reindex(self.label_list)[self.label_list]).astype(
-            np.float
-        )
+        labels = np.array(exam.reindex(
+            self.label_list)[self.label_list]).astype(np.float)
 
         sample = {"image": image, "labels": labels, "metadata": metadata}
 

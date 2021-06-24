@@ -4,12 +4,13 @@ Copyright (c) Facebook, Inc. and its affiliates.
 This source code is licensed under the MIT license found in the
 LICENSE file in the root directory of this source tree.
 """
-import covidprognosis.data.transforms as cpt
 import numpy as np
 import pytest
 import torch
 import torchvision.transforms as tvt
 from scipy.ndimage import gaussian_filter
+
+import covidprognosis.data.transforms as cpt
 
 from .conftest import create_input
 
@@ -18,15 +19,17 @@ from .conftest import create_input
 def test_compose(shape):
     sample = create_input(shape)
     transform = cpt.Compose(
-        [tvt.RandomHorizontalFlip(), tvt.ToTensor(), cpt.RandomGaussianBlur()]
-    )
+        [tvt.RandomHorizontalFlip(),
+         tvt.ToTensor(),
+         cpt.RandomGaussianBlur()])
 
     sample = transform(sample)
 
     assert sample["image"] is not None
 
 
-@pytest.mark.parametrize("shape, label_idx", [[[32, 32, 3], 0], [[45, 16, 3], 5]])
+@pytest.mark.parametrize("shape, label_idx",
+                         [[[32, 32, 3], 0], [[45, 16, 3], 5]])
 def test_nan_to_int(shape, label_idx):
     sample = create_input(shape)
     transform = cpt.Compose([tvt.ToTensor(), cpt.NanToInt(5)])
@@ -44,7 +47,9 @@ def test_nan_to_int(shape, label_idx):
 )
 def test_remap_label(shape, label_idx, start_label, end_label):
     sample = create_input(shape)
-    transform = cpt.Compose([tvt.ToTensor(), cpt.RemapLabel(start_label, end_label)])
+    transform = cpt.Compose(
+        [tvt.ToTensor(),
+         cpt.RemapLabel(start_label, end_label)])
 
     sample["labels"][label_idx] = start_label
 
@@ -60,12 +65,12 @@ def test_histnorm(shape):
     transform = cpt.Compose([tvt.ToTensor(), cpt.HistogramNormalize()])
 
     image = np.transpose(
-        torch.tensor(np.array(sample["image"]), dtype=torch.float).numpy(), (2, 0, 1)
-    )
+        torch.tensor(np.array(sample["image"]), dtype=torch.float).numpy(),
+        (2, 0, 1))
     # get image histogram
-    image_histogram, bins = np.histogram(
-        image.flatten(), transform.transforms[1].number_bins, density=True
-    )
+    image_histogram, bins = np.histogram(image.flatten(),
+                                         transform.transforms[1].number_bins,
+                                         density=True)
     cdf = image_histogram.cumsum()  # cumulative distribution function
     cdf = 255 * cdf / cdf[-1]  # normalize
 
@@ -91,16 +96,19 @@ def test_rand_gauss_blur(shape):
     # run the custom blur
     np.random.seed(seed)
     image = tvt.functional.to_tensor(sample["image"]) * 1
-    sigma = np.random.uniform(
-        transform.transforms[1].sigma_range[0], transform.transforms[1].sigma_range[1]
-    )
+    sigma = np.random.uniform(transform.transforms[1].sigma_range[0],
+                              transform.transforms[1].sigma_range[1])
 
-    image = torch.tensor(gaussian_filter(image.numpy(), sigma), dtype=image.dtype,)
+    image = torch.tensor(
+        gaussian_filter(image.numpy(), sigma),
+        dtype=image.dtype,
+    )
 
     # transform blur
-    transform = cpt.Compose(
-        [tvt.ToTensor(), cpt.RandomGaussianBlur(p=1, sigma_range=(sigma, sigma))]
-    )
+    transform = cpt.Compose([
+        tvt.ToTensor(),
+        cpt.RandomGaussianBlur(p=1, sigma_range=(sigma, sigma))
+    ])
     sample = transform(sample)
 
     assert torch.allclose(sample["image"], image)
@@ -137,7 +145,8 @@ def test_add_noise(shape):
     signal_level = np.mean(image.numpy())
 
     image = image + (signal_level / snr_level) * torch.tensor(
-        np.random.normal(size=tuple(image.shape)), dtype=image.dtype,
+        np.random.normal(size=tuple(image.shape)),
+        dtype=image.dtype,
     )
 
     # transform blur

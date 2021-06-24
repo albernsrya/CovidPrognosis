@@ -6,6 +6,7 @@ LICENSE file in the root directory of this source tree.
 """
 import pytest
 import torchvision.transforms as tvt
+
 from covidprognosis.data.transforms import Compose
 
 from .conftest import fetch_dataset

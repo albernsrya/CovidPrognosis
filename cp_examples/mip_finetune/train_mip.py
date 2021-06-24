@@ -13,15 +13,11 @@ from warnings import warn
 import numpy as np
 import pytorch_lightning as pl
 import torch
-from covidprognosis.data.transforms import (
-    HistogramNormalize,
-    NanToInt,
-    RemapLabel,
-    TensorToRGB,
-)
-from covidprognosis.plmodules import XrayDataModule
 from torchvision import transforms
 
+from covidprognosis.data.transforms import (HistogramNormalize, NanToInt,
+                                            RemapLabel, TensorToRGB)
+from covidprognosis.plmodules import XrayDataModule
 from cp_examples.mip_finetune.mip_model import MIPModule
 
 
@@ -66,8 +62,7 @@ def build_args(arg_defaults=None):
         args.resume_from_checkpoint = str(ckpt_list[-1])
 
     args.callbacks.append(
-        pl.callbacks.ModelCheckpoint(dirpath=checkpoint_dir, verbose=True)
-    )
+        pl.callbacks.ModelCheckpoint(dirpath=checkpoint_dir, verbose=True))
 
     return args
 
@@ -86,7 +81,8 @@ def fetch_pos_weights(csv, label_list, uncertain_label, nan_label):
     elif nan_label == -1:
         neg = neg + (csv[label_list].isna()).sum()
 
-    pos_weights = torch.tensor((neg / np.maximum(pos, 1)).values.astype(np.float))
+    pos_weights = torch.tensor(
+        (neg / np.maximum(pos, 1)).values.astype(np.float))
 
     return pos_weights
 

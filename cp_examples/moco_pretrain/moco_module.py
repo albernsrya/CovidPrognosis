@@ -6,10 +6,11 @@ LICENSE file in the root directory of this source tree.
 """
 from argparse import ArgumentParser
 
-import covidprognosis as cp
 import pytorch_lightning as pl
 import torch
 import torchvision.models as models
+
+import covidprognosis as cp
 
 
 class MoCoModule(pl.LightningModule):
@@ -56,7 +57,10 @@ class MoCoModule(pl.LightningModule):
         loss_val = self.loss_fn(output, target)
         self.train_acc(output, target)
         self.log("train_metrics/loss", loss_val)
-        self.log("train_metrics/accuracy", self.train_acc, on_step=True, on_epoch=False)
+        self.log("train_metrics/accuracy",
+                 self.train_acc,
+                 on_step=True,
+                 on_epoch=False)
 
         return loss_val
 
@@ -67,7 +71,8 @@ class MoCoModule(pl.LightningModule):
             momentum=self.momentum,
             weight_decay=self.weight_decay,
         )
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, self.epochs)
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer, self.epochs)
 
         return [optimizer], [scheduler]
 
